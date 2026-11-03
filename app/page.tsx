@@ -1,8 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
   Wifi,
   Bath,
   Coffee,
@@ -59,9 +63,35 @@ const SHOWCASE_GALLERY = [
   { img: "/images/work-9.jpg", title: "Boho Knotless", cat: "Flawless Braids" },
 ];
 
+const VIDEO_PROOF = [
+  "Feather-light tension",
+  "Neat, sculpted partings",
+  "Curl-sealed ends",
+];
+
 export default function Home() {
   const { open } = useBooking();
   const [copied, setCopied] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
+
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (isPlaying) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      void videoRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
+  const toggleMute = () => {
+    if (!videoRef.current) return;
+    videoRef.current.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
 
   const waHeroUrl = getWhatsAppApiLink(
     "Hello Moredays Hairthentic! I found you on your website and would like to ask about booking a hair appointment."
@@ -140,12 +170,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* REAL WORK GALLERY (Clean, mobile friendly, no placeholder notes) */}
+      {/* REAL WORK · REAL TRANSFORMATIONS (Video proof + gallery) */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
           <div>
             <p className="text-xs uppercase tracking-[0.35em] text-bronze">Signature Craftsmanship</p>
-            <h2 className="mt-2 font-serif text-3xl sm:text-4xl md:text-5xl text-espresso">Real Work. Real Transformations.</h2>
+            <WordReveal
+              as="h2"
+              scroll
+              text="Real Work. Real Transformations."
+              highlight="Real Transformations."
+              className="mt-2 font-serif text-3xl sm:text-4xl md:text-5xl text-espresso"
+            />
           </div>
           <Link
             href="/lookbook"
@@ -155,24 +191,128 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-4">
-          {SHOWCASE_GALLERY.map((item, i) => (
-            <Reveal key={item.title} delay={i * 0.08}>
-              <div className="group relative overflow-hidden rounded-2xl bg-espresso shadow-md">
-                <img
-                  src={item.img}
-                  alt={item.title}
-                  loading="lazy"
-                  className="h-60 sm:h-72 w-full object-cover transition duration-700 group-hover:scale-105 md:h-96"
+        <div className="mt-10 grid gap-8 lg:grid-cols-12 lg:items-stretch">
+          {/* Client transformation video */}
+          <div className="lg:col-span-5 flex flex-col items-center justify-center">
+            <div className="relative w-full max-w-[320px] sm:max-w-[360px]">
+              {/* Ambient gold glow behind the frame */}
+              <div className="pointer-events-none absolute -inset-2 rounded-[2.5rem] bg-gradient-to-tr from-gold/30 via-bronze/20 to-gold/40 opacity-75 blur-xl" />
+
+              <div className="relative overflow-hidden rounded-[2rem] border-2 border-gold/50 bg-espresso shadow-2xl shadow-espresso/30">
+                <video
+                  ref={videoRef}
+                  src="/videos/transformation.mp4"
+                  autoPlay
+                  loop
+                  muted={isMuted}
+                  playsInline
+                  className="h-[440px] sm:h-[520px] w-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-espresso/85 via-transparent to-transparent opacity-90" />
-                <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 text-cream">
-                  <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-gold">{item.cat}</p>
-                  <p className="font-serif text-base sm:text-xl font-medium">{item.title}</p>
+
+                {/* Readability gradients */}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-espresso/90 via-transparent to-espresso/35" />
+
+                {/* Top row: live badge + sound toggle */}
+                <div className="absolute inset-x-4 top-4 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 rounded-full border border-gold/30 bg-espresso/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-gold backdrop-blur-md">
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
+                    Real Client Reel
+                  </span>
+                  <button
+                    onClick={toggleMute}
+                    aria-label={isMuted ? "Unmute video" : "Mute video"}
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-cream/20 bg-espresso/80 text-cream backdrop-blur-md transition hover:bg-espresso hover:text-gold"
+                  >
+                    {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} className="text-gold" />}
+                  </button>
+                </div>
+
+                {/* Tap anywhere to play / pause */}
+                <button
+                  onClick={togglePlay}
+                  aria-label={isPlaying ? "Pause video" : "Play video"}
+                  className="absolute inset-0 flex items-center justify-center bg-black/10 transition hover:bg-black/20"
+                >
+                  {!isPlaying && (
+                    <span className="flex h-16 w-16 items-center justify-center rounded-full bg-espresso/90 text-gold shadow-2xl ring-2 ring-gold/60">
+                      <Play size={28} className="translate-x-0.5 fill-gold" />
+                    </span>
+                  )}
+                </button>
+
+                {/* Bottom meta + booking */}
+                <div className="absolute inset-x-4 bottom-4 space-y-3">
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-gold">
+                      Boho Knotless Curls · Client Transformation
+                    </p>
+                    <p className="font-serif text-lg font-bold text-cream">
+                      Moredays Signature Finish
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => open("Knotless Braids")}
+                      className="flex-1 rounded-full bg-gold py-2.5 text-xs font-bold text-espresso shadow-md transition hover:bg-bronze hover:text-cream"
+                    >
+                      Book This Look
+                    </button>
+                    <button
+                      onClick={togglePlay}
+                      aria-label={isPlaying ? "Pause video" : "Play video"}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-cream/25 bg-espresso/70 text-cream backdrop-blur-md transition hover:text-gold"
+                    >
+                      {isPlaying ? <Pause size={15} /> : <Play size={15} className="fill-cream" />}
+                    </button>
+                    <a
+                      href={getWhatsAppApiLink(
+                        "Hello Moredays Hairthentic! I saw your transformation video on your homepage and would like to book this hairstyle."
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Ask about this style on WhatsApp"
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-[#25D366] text-white shadow-md transition hover:bg-[#20ba59]"
+                    >
+                      <MessageCircle size={16} />
+                    </a>
+                  </div>
                 </div>
               </div>
-            </Reveal>
-          ))}
+            </div>
+
+            {/* At-a-glance proof chips */}
+            <ul className="mt-5 flex flex-wrap items-center justify-center gap-2">
+              {VIDEO_PROOF.map((point) => (
+                <li
+                  key={point}
+                  className="rounded-full border border-gold/30 bg-white/70 px-3 py-1 text-[11px] font-semibold text-espresso/75"
+                >
+                  {point}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Recent studio work */}
+          <div className="lg:col-span-7 grid grid-cols-2 gap-3 sm:gap-5">
+            {SHOWCASE_GALLERY.map((item, i) => (
+              <Reveal key={item.title} delay={i * 0.08} className="h-full">
+                <div className="group relative h-full overflow-hidden rounded-2xl bg-espresso shadow-md">
+                  <img
+                    src={item.img}
+                    alt={item.title}
+                    loading="lazy"
+                    className="h-52 sm:h-64 lg:h-[240px] w-full object-cover transition duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-espresso/85 via-transparent to-transparent opacity-90" />
+                  <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 text-cream">
+                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-gold">{item.cat}</p>
+                    <p className="font-serif text-base sm:text-xl font-medium">{item.title}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
